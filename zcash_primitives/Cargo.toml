@@ -1,7 +1,7 @@
 [package]
 name = "zcash_primitives"
 description = "Rust implementations of the Zcash primitives"
-version = "0.13.0"
+version = "0.13.1"
 authors = [
     "Jack Grigg <jack@z.cash>",
     "Kris Nuttycombe <kris@electriccoin.co>"
@@ -19,7 +19,7 @@ all-features = true
 
 [dependencies]
 equihash = { version = "0.2", path = "../components/equihash" }
-zcash_address = { version = "0.3", path = "../components/zcash_address" }
+zcash_address = { version = "0.3.2" }
 zcash_encoding = { version = "0.2", path = "../components/zcash_encoding" }
 
 # Dependencies exposed in a public API:
