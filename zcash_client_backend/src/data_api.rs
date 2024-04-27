@@ -257,14 +257,9 @@ pub trait WalletRead {
     /// tree size information for each block; or else the scan is likely to fail if notes belonging
     /// to the wallet are detected.
     ///
-    /// The returned range(s) may include block heights beyond the current chain tip. Ranges are
-    /// returned in order of descending priority, and higher-priority ranges should always be
-    /// scanned before lower-priority ranges; in particular, ranges with [`ScanPriority::Verify`]
-    /// priority must always be scanned first in order to avoid blockchain continuity errors in the
-    /// case of a reorg.
+    /// The returned range(s) may include block heights beyond the current chain tip.
     ///
     /// [`CompactBlock`]: crate::proto::compact_formats::CompactBlock
-    /// [`ScanPriority::Verify`]: crate::data_api::scanning::ScanPriority
     fn suggest_scan_ranges(&self) -> Result<Vec<ScanRange>, Self::Error>;
 
     /// Returns the default target height (for the block in which a new
@@ -457,7 +452,6 @@ pub struct ScannedBlock<Nf> {
 }
 
 impl<Nf> ScannedBlock<Nf> {
-    /// Constructs a new `ScannedBlock`
     pub fn from_parts(
         metadata: BlockMetadata,
         block_time: u32,
@@ -474,53 +468,34 @@ impl<Nf> ScannedBlock<Nf> {
         }
     }
 
-    /// Returns the height of the block that was scanned.
     pub fn height(&self) -> BlockHeight {
         self.metadata.block_height
     }
 
-    /// Returns the block hash of the block that was scanned.
     pub fn block_hash(&self) -> BlockHash {
         self.metadata.block_hash
     }
 
-    /// Returns the block time of the block that was scanned, as a Unix timestamp in seconds.
     pub fn block_time(&self) -> u32 {
         self.block_time
     }
 
-    /// Returns the metadata describing the state of the note commitment trees as of the end of the
-    /// scanned block.
-    ///
-    /// The metadata returned from this method is guaranteed to be consistent with what is returned
-    /// by [`Self::height`] and [`Self::block_hash`].
     pub fn metadata(&self) -> &BlockMetadata {
         &self.metadata
     }
 
-    /// Returns the list of transactions from the block that are relevant to the wallet.
     pub fn transactions(&self) -> &[WalletTx<Nf>] {
         &self.transactions
     }
 
-    /// Returns the vector of Sapling nullifiers for each transaction in the block.
-    ///
-    /// The returned tuple is keyed by both transaction ID and the index of the transaction within
-    /// the block, so that either the txid or the combination of the block hash available from
-    /// [`Self::block_hash`] and returned transaction index may be used to uniquely identify the
-    /// transaction, depending upon the needs of the caller.
     pub fn sapling_nullifier_map(&self) -> &[(TxId, u16, Vec<sapling::Nullifier>)] {
         &self.sapling_nullifier_map
     }
 
-    /// Returns the ordered list of Sapling note commitments to be added to the note commitment
-    /// tree.
     pub fn sapling_commitments(&self) -> &[(sapling::Node, Retention<BlockHeight>)] {
         &self.sapling_commitments
     }
 
-    /// Consumes `self` and returns the list of Sapling note commitments associated with the
-    /// scanned block as an owned value.
     pub fn into_sapling_commitments(self) -> Vec<(sapling::Node, Retention<BlockHeight>)> {
         self.sapling_commitments
     }
@@ -892,16 +867,6 @@ pub trait WalletCommitmentTrees {
         Error = Self::Error,
     >;
 
-    /// Returns the depth of the checkpoint in the tree that can be used to create a witness at the
-    /// anchor having the given number of confirmations.
-    ///
-    /// This assumes that at any time a note is added to the tree, a checkpoint is created for the
-    /// end of the block in which that note was discovered.
-    fn get_checkpoint_depth(
-        &self,
-        min_confirmations: NonZeroU32,
-    ) -> Result<usize, ShardTreeError<Self::Error>>;
-
     fn with_sapling_tree_mut<F, A, E>(&mut self, callback: F) -> Result<A, E>
     where
         for<'a> F: FnMut(
@@ -1216,13 +1181,6 @@ pub mod testing {
             })?;
 
             Ok(())
-        }
-
-        fn get_checkpoint_depth(
-            &self,
-            min_confirmations: NonZeroU32,
-        ) -> Result<usize, ShardTreeError<Self::Error>> {
-            Ok(usize::try_from(u32::from(min_confirmations)).unwrap())
         }
     }
 }

@@ -488,8 +488,6 @@ where
     // are no possible transparent inputs, so we ignore those
     let mut builder = Builder::new(params.clone(), proposal.min_target_height(), None);
 
-    let checkpoint_depth = wallet_db.get_checkpoint_depth(min_confirmations)?;
-
     wallet_db.with_sapling_tree_mut::<_, _, Error<_, _, _, _, _>>(|sapling_tree| {
         for selected in proposal.sapling_inputs() {
             let (note, key, merkle_path) = select_key_for_note(
@@ -497,7 +495,7 @@ where
                 selected,
                 usk.sapling(),
                 &dfvk,
-                checkpoint_depth,
+                usize::try_from(u32::from(min_confirmations) - 1).unwrap(),
             )?
             .ok_or(Error::NoteMismatch(selected.note_id))?;
 
